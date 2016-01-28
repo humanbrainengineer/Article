@@ -66,3 +66,63 @@ The main advantage of BSD-style scripts is that they're terribly easy to read an
 So, while most distributions use SysV style, Slackware uses BSD-style. For many Slackware users, the ease-of-use of the BSD-style greatly outweighs the power of SysV-style. You can certainly form your own opinion.
 
 Contrary to popular belief, it's not that difficult to switch from one style to the other--just grab the inittab and rc files from one system and copy them to another. The init binary itself is not changed--most of the ''style'' is set in inittab and the scripts it calls.
+
+
+
+
+#===================================================================#===================================================================
+#===================================================================#===================================================================
+
+
+LFS-Bootscripts
+
+安装指导参见： the 节 called 安装 LFS-Bootscripts-1.12 在 第 6 章.
+官方下载地址
+
+LFS-Bootscripts (1.12): 
+http://downloads.linuxfromscratch.org/
+LFS-bootscripts的内容
+
+LFS-Bootscripts 软件包包含 SysV 风格的初始化shell脚本。这些脚本执行多种任务，如启动时检查文件系统完整性，加载键盘映射，设置网络和在关机时终止进程。
+
+安装下列脚本: checkfs, cleanfs, functions, halt, ifdown, ifup, loadkeys, localnet, mountfs, mountproc, network, rc, reboot, sendsignals, setclock, swap, sysklogd 和 template
+
+简短说明
+
+checkfs脚本在mount之前检查文件系统(除了日志和网络文件系统).
+
+cleanfs删除那些在两次重起之间不能保留的文件,比如:/var/run/* and /var/lock/*.它会重新生成 /var/run/utmp并且删除/etc/nologin, /fastboot and /forcefsck files(如果它们存在的话).
+
+functions脚本包含了一些在其他脚本中引用的函数, 比如错误检查,状态检查等.
+
+halt 脚本终止系统运行。
+
+ifdown 和 ifup 脚本辅助网络脚本操作网络设备.
+
+loadkeys 脚本加载键盘映射表(即键盘布局)。
+
+localnet 脚本设置系统的主机名和本地loopback设备。
+
+mountfs 脚本加载所以未注明为noauto的非网络文件系统。
+
+mountproc 脚本加载proc文件系统。
+
+network 建立网络界面,例如网卡; 并且设置默认网关.
+
+rc 脚本是主运行级控制脚本，负责以特定顺序依次运行其他的脚本。
+
+reboot 脚本重启系统。
+
+sendsignals 确保在系统重启或关机前，每个进程都结束了。
+
+setclock 如果硬件时间(主板上面的表)不是设置在格林威治时间,这个脚本会重置内核时间到当地时间。
+
+swap 脚本打开或者关闭交换文件和交换分区。
+
+sysklogd 脚本开始或者终止系统和内核日志守护进程。
+
+template 脚本是用来建立你其他守护进程的起动脚本模板。
+
+LFS-Bootscripts 安装依赖关系
+
+LFS-Bootscripts 依赖于: Bash, Coreutils.
