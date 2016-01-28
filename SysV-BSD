@@ -1,0 +1,68 @@
+ SysV和BSD启动风格的比较
+
+日期：2007-01-08　作者：windrose译　来自：linuxsir
+
+Slackware启动脚本与System V启动脚本的区别何在？
+作者：kkeller
+翻译：windrose
+Slackware版本：Slackware 7.0及以上
+写于：2002-6-24
+
+好了，说来话长。莫谓言之不预也。
+
+Slackware 使用BSD风格的init脚本，而很多别的发行版使用System V风格的init脚本。SysV和BSD脚本都是能让人读懂的，即它们都是shell脚本，而不是已编译的程序。主要的区别在于脚本是如何设计的。
+
+SysV脚本倾向于接受诸如start、stop、restart之类的参数，依它所启动的程序而定。所以你可以用 /etc/init.d/bind start 这样的命令来启动BIND，并用 /etc/init.d/bind stop 来停止BIND。
+
+SysV的启动还倾向于使用符号链接来组织启动进程，例如在 /etc/rc.d/rc.4/中，可能会有指向别的目录中的真正的脚本的各种各样的符号链接。这些链接的命令会像是 S10network、S25xdm之类，其中的S表示启动(start)该项服务(如果是K，则表示kill)，而数字指定了脚本执行的顺序。
+
+SysV风格的启动脚本的主要优点在于能够设置成自动配置许多东西。例如，若你进入runlevel 6，你可以建立一个链接叫K75bind来终止BIND，前提是链接所指向的文件已经设置好来做这件事。
+
+SysV风格脚本的主要缺点是太过弯弯绕。假如我想增加一个服务，我要先写一个SysV风格的脚本(不是容易的事)，它至少要处理“start”(还可能有“stop”)。然后，我必须确保在每个要运行这个服务的runlevel中正确地设置好符号链接。如果恰好这个服务需要在已经连续编号的两个脚本之间运行，我就需要做一些对符号链接重新编号的工作(例如，S10xxx和S11yyy已经存在，而我想让zzzz在它们之间运行，我就需要对前两者之一重新建立符号链接来把zzzz挤进去)。
+
+想暂时改变SysV的启动进程也是非常痛苦的事情。假如我不想在下次启动时运行xxx服务，最简单的办法是删除S10xxx这个链接，不算难吧？但如果我想在每个runlevel中都去掉它，我就需要从每个有关目录中删除S10xxx这个链接。然后，假如我改了主意，想重新运行xxx，我需要手工重新建立所有的符号链接。
+
+这样子无疑是在已经很复杂的启动进程上叠床架屋，而Slackware是不会这么做的：它用BSD风格的启动脚本。
+
+BSD风格的脚本是直接了当的shell脚本，它们倾向于顺序运行，而不需要start或stop之类参数。只要系统进入了它们的runlevel就会执行，就这么简单。
+
+BSD风格的主要缺点是你需要一些其他方法来控制后台服务。例如，若我要停止BIND，我要先用命令 ps ax|grep named 找出 named的PID，然后kill这个PID(或者用这个pid的文件名)。但是我不能简单地下个命令 /etc/init.d/bind stop (除非我已经写了个这样的SysV脚本)。
+
+BSD风格脚本的主要优点是它们非常容易阅读和编辑。例如，若我想增加一个服务zzzz，我可以在 /etc/rd.d/rc.local中增加一行 /usr/local/bin/zzzz，这样只要是执行rc.local的runlevel，zzzz就会随之运行。假如我只想在runlevel 4执行zzzz，我可以把它放在 /etc/rc.d/rc.4 (不是目录，而是一个脚本)中。如果我要改变执行顺序，我只要把zzzz放在适当的服务之间，多数编辑器都支持在文件中间插入文本(就算ed都支持)。还有，你可以用注释的方式停止一个服务，然后去掉注释让它重新运行。
+
+因此，当多数发行版采用SysV风格时，Slackware采用了BSD风格。对于许多Slackware用户，BSD风格的易用性胜过SysV风格的强大功能。当然，你可以有自己的意见。
+
+与普遍的观点相反，从一种风格转到另一种并不那么困难，只要把inittab和rc文件从一个系统拷贝到另一个系统即可。init程序自身没有改变，所谓“风格”多是在inittab和它所调用的脚本中设置的。
+
+译注：现在slackware为了提高兼容性，在/etc/rc.d/提供了rc.sysvinit脚本以适应某些基于SysV启动过程的商业程序的需要。另外，在许多设置服务的脚本中，也接受start、stop、restart这一类参数，例如rc.sendmail、rc.sshd等。
+
+What's the difference between Slackware startup scripts and System V startup scripts?
+Author: kkeller
+Slackware Release: Slackware 7.0 and higher
+Written on: 2002-06-24
+
+Okay, this answer is very long. Just a warning.
+
+Slackware uses BSD-style init scripts; many other distros use System V-style init scripts. Both SysV scripts and BSD scripts are human-readable, in that they are shell scripts, not compiled programs. The main difference is in how the scripts are designed.
+
+SysV scripts tend to take arguments like start, stop, restart, and others, depending on the program it's starting. So you could say something like /etc/ init.d/bind start to start BIND, and /etc/init.d/bind stop to stop BIND.
+
+SysV-style init also tends to use symlinks to organize the boot process: in /etc/rc.d/rc.4/, there might be various symlinks to actual scripts in another directory. The symlinks are named like S10network, S25xdm, and so on, where the S means to start the service (K means kill it), and the numbers designate the order in which scripts should run.
+
+The main advantage of SysV style init scripts is that they can be set up to configure a lot of stuff automagically. If, for example, you go into runlevel 6, you can have a symlink in /etc/rc.d/rc.6/ called K75bind, which will kill off BIND if the file to which its linked is set up to do that.
+
+The main disadvantage of SysV style is that it's terribly convoluted. If I want to add a service, for example, I need to write a SysV-style script (which is certainly nontrivial) to at least handle "start" (and possibly "stop"). Then I need to make sure I've got the symlink set up correctly in each runlevel where I want it to run, and if I happen to need it to execute between two scripts that are consecutively numbered, I need to do some symlink renumbering (e.g., if S10xxx and S11yyy exist, and I want zzzz to run between, I need to resymlink one of those files to squeeze zzzz between them).
+
+It's also a huge pain to alter the SysV boot process temporarily--if I want service xxx to not run on next boot, the easiest way is to remove the S10xxx symlink. Not too hard, but if I want to remove it from every runlevel, I need to remove the S10xxx symlink from every directory. Then if I change my mind and want xxx to run again, I need to recreate all of the appropriate symlinks by hand.
+
+It's one extra level of complexity to the already-complicated boot process, and one which Slackware doesn't use: it uses BSD-style startup scripts instead.
+
+BSD-style scripts are straight-ahead shell scripts that tend to run sequentially and don't take arguments like start or stop. They run when the system enters their runlevel, and that's it.
+
+The main disadvantage of BSD-style is that you have to use some other method of controlling daemons. For example, if I want to stop BIND, I need to ps ax|grep named, find named's PID, and kill the pid. (Or I can find the pid file.) But I can't say /etc/init.d/bind stop (unless I write a SysV-style script for that).
+
+The main advantage of BSD-style scripts is that they're terribly easy to read and edit. For example, if I add a new service zzzz, I can add the line /usr/ local/bin/zzzz to /etc/rc.d/rc.local, and zzzz will run in the runlevels where rc.local executes. If I know I want zzzz only in runlevel 4, I can put it in /etc/ rc.d/rc.4 (no longer a directory, but a shell script). If I need to change the order, I can just put the call to zzzz between the services where it should run; most editors can handle inserting text in the middle of a file (even ed!). Also, you can easily comment out a service to stop it from running, and uncomment it later.
+
+So, while most distributions use SysV style, Slackware uses BSD-style. For many Slackware users, the ease-of-use of the BSD-style greatly outweighs the power of SysV-style. You can certainly form your own opinion.
+
+Contrary to popular belief, it's not that difficult to switch from one style to the other--just grab the inittab and rc files from one system and copy them to another. The init binary itself is not changed--most of the ''style'' is set in inittab and the scripts it calls.
